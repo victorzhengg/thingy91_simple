@@ -14,3 +14,9 @@ target_sources(app PRIVATE src/main.c)
 # NORDIC SDK APP END
 
 zephyr_include_directories(src)
+
+zephyr_library_include_directories(
+	src/ui
+	)
+
+add_subdirectory(src/ui)

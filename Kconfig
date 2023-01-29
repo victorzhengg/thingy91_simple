@@ -4,6 +4,11 @@
 # SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #
 
+menu "Thingy 91 sample"
+
+rsource "src/ui/Kconfig"
+rsource "src/ui/Kconfig.ui_led"
+	
 menu "UDP Sample Settings"
 
 config UDP_DATA_UPLOAD_SIZE_BYTES
@@ -37,6 +42,8 @@ endmenu
 module = UDP
 module-str = UDP sample
 source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
+
+endmenu 
 
 menu "Zephyr Kernel"
 source "Kconfig.zephyr"

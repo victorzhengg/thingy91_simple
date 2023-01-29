@@ -9,6 +9,7 @@
 #include <modem/lte_lc.h>
 #include <zephyr/net/socket.h>
 #include <nrf_modem_gnss.h>
+#include "ui_led.h"
 
 
 LOG_MODULE_REGISTER(main, 3);
@@ -36,8 +37,12 @@ static struct k_work_delayable multi_cell_request_dwork;
 static K_SEM_DEFINE(pvt_data_sem, 0, 1);
 static struct nrf_modem_gnss_pvt_data_frame last_pvt;
 
+/*ui led*/
+#define BRIGHTNESS_MAX   100U
 
-
+static bool state[NUM_LEDS];
+static uint8_t brightness_val[NUM_LEDS];
+static uint8_t colour_val[NUM_LEDS];
 
 static void server_transmission_work_fn(struct k_work *work)
 {
@@ -260,6 +265,32 @@ void user_work_init(void)
         k_work_init_delayable(&gnss_data_process_dwork, gnss_data_process_dwork_fn);
 }
 
+
+
+static uint8_t calculate_intensity(uint8_t colour_value, uint8_t brightness_value)
+{
+	uint32_t numerator = (uint32_t)colour_value * brightness_value;
+	uint32_t denominator = BRIGHTNESS_MAX;
+
+	return (uint8_t)(numerator / denominator);
+}
+
+static void ui_led_init(void)
+{
+	uint8_t intensity;
+
+	if (IS_ENABLED(CONFIG_UI_LED_USE_PWM)) {
+		ui_led_pwm_init();
+		for (int i = 0; i < NUM_LEDS; ++i) {
+			colour_val[i] = UINT8_MAX;
+			brightness_val[i] = BRIGHTNESS_MAX;
+			intensity = calculate_intensity(colour_val[i], brightness_val[i]);
+			ui_led_pwm_set_intensity(i, intensity);
+		}
+	} else if (IS_ENABLED(CONFIG_UI_LED_USE_GPIO)) {
+		ui_led_gpio_init();
+	}
+}
 void main(void)
 {
 	int err;
@@ -269,6 +300,8 @@ void main(void)
 	work_init();
 
 	user_work_init();
+
+	ui_led_init();
 
 #if defined(CONFIG_NRF_MODEM_LIB)
 
