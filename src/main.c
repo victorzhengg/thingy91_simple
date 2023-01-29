@@ -9,6 +9,9 @@
 #include <modem/lte_lc.h>
 #include <zephyr/net/socket.h>
 
+
+LOG_MODULE_REGISTER(main, 3);
+
 #define UDP_IP_HEADER_SIZE 28
 
 static int client_fd;
@@ -20,7 +23,7 @@ K_SEM_DEFINE(lte_connected, 0, 1);
 static void server_transmission_work_fn(struct k_work *work)
 {
 	int err;
-	char buffer[CONFIG_UDP_DATA_UPLOAD_SIZE_BYTES] = {"\0"};
+	char buffer[CONFIG_UDP_DATA_UPLOAD_SIZE_BYTES] = {"hello from thingy\0"};
 
 	printk("Transmitting UDP/IP payload of %d bytes to the ",
 	       CONFIG_UDP_DATA_UPLOAD_SIZE_BYTES + UDP_IP_HEADER_SIZE);
@@ -133,6 +136,7 @@ static int configure_low_power(void)
 static void modem_init(void)
 {
 	int err;
+	uint8_t at_buf[64];
 
 	if (IS_ENABLED(CONFIG_LTE_AUTO_INIT_AND_CONNECT)) {
 		/* Do nothing, modem is already configured and LTE connected. */
@@ -143,6 +147,12 @@ static void modem_init(void)
 			return;
 		}
 	}
+
+	nrf_modem_at_cmd(at_buf, sizeof(at_buf), "AT%%XEPCO=0");
+	printk("AT%%XEPCO: %s\n", at_buf);
+
+	nrf_modem_at_cmd(at_buf, sizeof(at_buf), "AT+CGMR");
+	printk("Current modem firmware version: %s\n", at_buf);	
 }
 
 static void modem_connect(void)
@@ -210,7 +220,7 @@ void main(void)
 {
 	int err;
 
-	printk("UDP sample has started\n");
+	printk("Thing simple example start\n");
 
 	work_init();
 
@@ -232,6 +242,8 @@ void main(void)
 
 	k_sem_take(&lte_connected, K_FOREVER);
 #endif
+
+	printk("LTE connected\n");
 
 	err = server_init();
 	if (err) {
