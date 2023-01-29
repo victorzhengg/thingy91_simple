@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <modem/lte_lc.h>
 #include <zephyr/net/socket.h>
+#include <nrf_modem_gnss.h>
 
 
 LOG_MODULE_REGISTER(main, 3);
@@ -19,6 +20,24 @@ static struct sockaddr_storage host_addr;
 static struct k_work_delayable server_transmission_work;
 
 K_SEM_DEFINE(lte_connected, 0, 1);
+
+
+/*victor add variables*/
+#define USER_WORK_Q_STACK_SIZE 4096
+#define USER_WORK_Q_PRIORITY 5
+K_THREAD_STACK_DEFINE(user_work_q_stack, USER_WORK_Q_STACK_SIZE);
+static struct k_work_q user_work_q;
+
+/*gnss*/
+static struct k_work_delayable gnss_data_process_dwork;
+
+static struct k_work_delayable multi_cell_request_dwork;
+
+static K_SEM_DEFINE(pvt_data_sem, 0, 1);
+static struct nrf_modem_gnss_pvt_data_frame last_pvt;
+
+
+
 
 static void server_transmission_work_fn(struct k_work *work)
 {
@@ -216,6 +235,31 @@ error:
 	return err;
 }
 
+
+
+
+/*victor add functions */
+
+static void gnss_data_process_dwork_fn(struct k_work *work)
+{
+	printf("\033[1;1H");
+	printf("\033[2J");
+	//print_satellite_stats(&last_pvt);
+	if (last_pvt.flags & NRF_MODEM_GNSS_PVT_FLAG_FIX_VALID) {
+		//print_fix_data(&last_pvt);
+	}
+}
+
+void user_work_init(void)
+{
+        k_work_queue_init(&user_work_q);
+        k_work_queue_start(&user_work_q, user_work_q_stack,
+                           K_THREAD_STACK_SIZEOF(user_work_q_stack), USER_WORK_Q_PRIORITY,
+                           NULL);
+
+        k_work_init_delayable(&gnss_data_process_dwork, gnss_data_process_dwork_fn);
+}
+
 void main(void)
 {
 	int err;
@@ -223,6 +267,8 @@ void main(void)
 	printk("Thing simple example start\n");
 
 	work_init();
+
+	user_work_init();
 
 #if defined(CONFIG_NRF_MODEM_LIB)
 
