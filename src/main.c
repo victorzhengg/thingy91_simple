@@ -303,6 +303,14 @@ void main(void)
 
 	ui_led_init();
 
+	ui_led_pwm_on_off(0, true); 
+	ui_led_pwm_on_off(1, true);
+	ui_led_pwm_on_off(2, true);
+
+	ui_led_pwm_set_intensity(0, 0);     /*Red*/
+	ui_led_pwm_set_intensity(1, 0);     /*Green*/
+	ui_led_pwm_set_intensity(2, 255);   /*Blue*/	
+
 #if defined(CONFIG_NRF_MODEM_LIB)
 
 	/* Initialize the modem before calling configure_low_power(). This is
