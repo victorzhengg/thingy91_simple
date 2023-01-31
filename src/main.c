@@ -10,7 +10,7 @@
 #include <zephyr/net/socket.h>
 #include <nrf_modem_gnss.h>
 #include "ui_led.h"
-
+#include "ui_buzzer.h"
 
 LOG_MODULE_REGISTER(main, 3);
 
@@ -43,6 +43,10 @@ static struct nrf_modem_gnss_pvt_data_frame last_pvt;
 static bool state[NUM_LEDS];
 static uint8_t brightness_val[NUM_LEDS];
 static uint8_t colour_val[NUM_LEDS];
+
+/*ui buzzer*/
+#define INTENSITY_START_VAL 100.0
+#define FREQUENCY_START_VAL 440U
 
 static void server_transmission_work_fn(struct k_work *work)
 {
@@ -266,6 +270,26 @@ void user_work_init(void)
 }
 
 
+static void user_buzzer_init(void)
+{
+	int ret;
+	double start_intensity = INTENSITY_START_VAL;
+
+	ret = ui_buzzer_init();
+	if (ret) {
+		LOG_ERR("Init ui buzzer failed (%d)", ret);
+	}
+
+	ret = ui_buzzer_set_intensity(INTENSITY_START_VAL);
+	if (ret) {
+		LOG_ERR("Set buzzer intensity failed (%d)", ret);
+	}
+
+	ret = ui_buzzer_set_frequency(FREQUENCY_START_VAL);
+	if (ret) {
+		LOG_ERR("Set buzzer frequency failed (%d)", ret);
+	}
+}
 
 static uint8_t calculate_intensity(uint8_t colour_value, uint8_t brightness_value)
 {
@@ -275,7 +299,7 @@ static uint8_t calculate_intensity(uint8_t colour_value, uint8_t brightness_valu
 	return (uint8_t)(numerator / denominator);
 }
 
-static void ui_led_init(void)
+static void user_led_init(void)
 {
 	uint8_t intensity;
 
@@ -301,7 +325,7 @@ void main(void)
 
 	user_work_init();
 
-	ui_led_init();
+	user_led_init();
 
 	ui_led_pwm_on_off(0, true); 
 	ui_led_pwm_on_off(1, true);
@@ -310,6 +334,9 @@ void main(void)
 	ui_led_pwm_set_intensity(0, 0);     /*Red*/
 	ui_led_pwm_set_intensity(1, 0);     /*Green*/
 	ui_led_pwm_set_intensity(2, 255);   /*Blue*/	
+
+	user_buzzer_init();
+	ui_buzzer_on_off(true);
 
 #if defined(CONFIG_NRF_MODEM_LIB)
 
