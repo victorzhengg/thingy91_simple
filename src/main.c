@@ -11,6 +11,7 @@
 #include <nrf_modem_gnss.h>
 #include "ui_led.h"
 #include "ui_buzzer.h"
+#include <dk_buttons_and_leds.h>
 
 LOG_MODULE_REGISTER(main, 3);
 
@@ -315,6 +316,20 @@ static void user_led_init(void)
 		ui_led_gpio_init();
 	}
 }
+
+static void button_event_handler(uint32_t button_state, uint32_t has_changed)
+{
+	if (has_changed & button_state & DK_BTN1_MSK) {
+		/*
+		if (!atomic_get(&connected)) {
+			LOG_INF("Ignoring button press, not connected to network");
+			return;
+		}
+		*/
+		printk("Button 1 pressed\n");
+		//start_cell_measurements();
+	}
+}
 void main(void)
 {
 	int err;
@@ -337,6 +352,11 @@ void main(void)
 
 	user_buzzer_init();
 	//ui_buzzer_on_off(true);
+
+	err = dk_buttons_init(button_event_handler);
+	if (err) {
+		LOG_ERR("Could not initialize buttons (%d)", err);
+	}
 
 #if defined(CONFIG_NRF_MODEM_LIB)
 
