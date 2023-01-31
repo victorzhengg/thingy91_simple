@@ -12,6 +12,7 @@
 #include "ui_led.h"
 #include "ui_buzzer.h"
 #include <dk_buttons_and_leds.h>
+#include <zephyr/shell/shell.h>
 
 LOG_MODULE_REGISTER(main, 3);
 
@@ -48,6 +49,38 @@ static uint8_t colour_val[NUM_LEDS];
 /*ui buzzer*/
 #define INTENSITY_START_VAL 100.0
 #define FREQUENCY_START_VAL 440U
+
+/* shell */
+
+static int cmd_gnss(const struct shell *shell, size_t argc,
+                         char **argv)
+{
+	int cnt;
+	shell_print(shell, "cmd_gnss argc = %d", argc);
+	for (cnt = 0; cnt < argc; cnt++) {
+			shell_print(shell, "cmd_gnss argv[%d] = %s", cnt, argv[cnt]);
+	}
+	return 0;
+}
+
+static int cmd_fftt(const struct shell *shell, size_t argc,
+                           char **argv)
+{
+	int cnt;
+	shell_print(shell, "cmd_fftt argc = %d", argc);
+	for (cnt = 0; cnt < argc; cnt++) {
+			shell_print(shell, "cmd_fftt argv[%d] = %s", cnt, argv[cnt]);
+	}
+	return 0;
+}
+
+SHELL_STATIC_SUBCMD_SET_CREATE(sub_thingy,
+        SHELL_CMD(gnss, NULL, "Start gnss test", cmd_gnss),
+        SHELL_CMD(fftt,   NULL, "Start first fix time test.", cmd_fftt),
+        SHELL_SUBCMD_SET_END
+);
+/* Creating root (level 0) command "demo" without a handler */
+SHELL_CMD_REGISTER(thingy, &sub_thingy, "Thingy 91 command line interface", NULL);
 
 static void server_transmission_work_fn(struct k_work *work)
 {
@@ -320,14 +353,7 @@ static void user_led_init(void)
 static void button_event_handler(uint32_t button_state, uint32_t has_changed)
 {
 	if (has_changed & button_state & DK_BTN1_MSK) {
-		/*
-		if (!atomic_get(&connected)) {
-			LOG_INF("Ignoring button press, not connected to network");
-			return;
-		}
-		*/
 		printk("Button 1 pressed\n");
-		//start_cell_measurements();
 	}
 }
 void main(void)
