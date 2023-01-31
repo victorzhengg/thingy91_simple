@@ -336,7 +336,7 @@ void main(void)
 	ui_led_pwm_set_intensity(2, 255);   /*Blue*/	
 
 	user_buzzer_init();
-	ui_buzzer_on_off(true);
+	//ui_buzzer_on_off(true);
 
 #if defined(CONFIG_NRF_MODEM_LIB)
 
