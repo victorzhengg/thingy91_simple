@@ -38,7 +38,7 @@ struct user_ui_effect {
 	/* blinky interval value Range: 0~255 Unit:second*/
 	uint8_t interval;
 
-	/* effect duration value range 0~255. Unit:second*/
+	/* effect duration value range 0~255. 0=forever Unit:second*/
 	uint8_t duration;
 };
 
@@ -52,7 +52,7 @@ typedef struct {
  *
  * @return int 0 if successful, negative error code if not.
  */
-int user_ui_effect_rgb_set(struct user_ui_color color, struct user_ui_effect);
+int user_ui_effect_rgb_set(struct user_ui_color color, struct user_ui_effect effect);
 
 #ifdef __cplusplus
 }

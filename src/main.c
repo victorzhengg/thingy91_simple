@@ -13,6 +13,7 @@
 #include "ui_buzzer.h"
 #include <dk_buttons_and_leds.h>
 #include <zephyr/shell/shell.h>
+#include "user_ui_effect.h"
 
 LOG_MODULE_REGISTER(main, 3);
 
@@ -50,7 +51,8 @@ static uint8_t colour_val[NUM_LEDS];
 #define INTENSITY_START_VAL 100.0
 #define FREQUENCY_START_VAL 440U
 
-/* shell */
+/* test */
+static struct k_work_delayable ui_test;
 
 static int cmd_gnss(const struct shell *shell, size_t argc,
                          char **argv)
@@ -293,6 +295,28 @@ static void gnss_data_process_dwork_fn(struct k_work *work)
 	}
 }
 
+/* test function*/
+static void ui_test_fn(struct k_work *work)
+{
+	int ret;
+	struct user_ui_color rgb_color;
+	struct user_ui_effect rgb_effect;
+
+	rgb_color.red = 0;
+	rgb_color.green = 255;
+	rgb_color.blue = 0;
+
+	rgb_effect.type = USER_UI_EFFECT_RGB_TYPE_BLINKY;
+	rgb_effect.interval = 2;
+	rgb_effect.duty = 50;
+	rgb_effect.duration = 120;
+	
+	ret = user_ui_effect_rgb_set(rgb_color,rgb_effect);
+	if(ret) {
+		LOG_ERR("user_ui_effect_rgb_set error");
+	}
+}
+
 void user_work_init(void)
 {
         k_work_queue_init(&user_work_q);
@@ -301,6 +325,7 @@ void user_work_init(void)
                            NULL);
 
         k_work_init_delayable(&gnss_data_process_dwork, gnss_data_process_dwork_fn);
+		k_work_init_delayable(&ui_test, ui_test_fn);
 }
 
 
@@ -368,16 +393,7 @@ void main(void)
 
 	user_led_init();
 
-	ui_led_pwm_on_off(0, true); 
-	ui_led_pwm_on_off(1, true);
-	ui_led_pwm_on_off(2, true);
-
-	ui_led_pwm_set_intensity(0, 0);     /*Red*/
-	ui_led_pwm_set_intensity(1, 0);     /*Green*/
-	ui_led_pwm_set_intensity(2, 255);   /*Blue*/	
-
 	user_buzzer_init();
-	//ui_buzzer_on_off(true);
 
 	err = dk_buttons_init(button_event_handler);
 	if (err) {
@@ -418,4 +434,6 @@ void main(void)
 	}
 
 	k_work_schedule(&server_transmission_work, K_NO_WAIT);
+
+	k_work_schedule_for_queue(&user_work_q, &ui_test, K_SECONDS(10));
 }

@@ -30,22 +30,61 @@ int16_t total_lift_span_cnt = 0;
 static user_ui_message message;
 
 static void rgb_open_dwork_fn(struct k_work *work)
-{}
+{
+    printk("rgb_open_dwork_fn\n");
+    ui_led_pwm_on_off(0, true); 
+	ui_led_pwm_on_off(1, true);
+	ui_led_pwm_on_off(2, true);    
+}
 
 static void rgb_close_dwork_fn(struct k_work *work)
-{}
+{
+    printk("rgb_close_dwork_fn\n");
+    ui_led_pwm_on_off(0, false); 
+	ui_led_pwm_on_off(1, false);
+	ui_led_pwm_on_off(2, false);    
+}
 
 static void rgb_set_color_dwork_fn(struct k_work *work)
-{}
+{
+    printk("rgb_set_color_dwork_fn\n");
+	ui_led_pwm_set_intensity(0, message.color.red);     /*Red*/
+	ui_led_pwm_set_intensity(1, message.color.green);   /*Green*/
+	ui_led_pwm_set_intensity(2, message.color.blue);    /*Blue*/	
+}
 
 static void rgb_interval_dwork_fn(struct k_work *work)
 {
+    printk("rgb_interval_dwork_fn\n");
+    uint16_t duty_value;
     //struct user_ui_message *message = CONTAINER_OF(work, struct user_ui_message, work);
+    k_work_schedule_for_queue(&user_ui_work_q, &rgb_set_color_dwork, K_NO_WAIT);
+    k_work_schedule_for_queue(&user_ui_work_q, &rgb_open_dwork, K_NO_WAIT);
+
+    duty_value = (uint16_t)message.effect.interval * message.effect.duty;
+    duty_value = duty_value / 100;
+
+    k_work_schedule_for_queue(&user_ui_work_q, &rgb_close_dwork, K_SECONDS(duty_value));
+
+    if(message.effect.duration > 0) {
+        total_lift_span_cnt = total_lift_span_cnt - message.effect.interval;
+        if(total_lift_span_cnt > 0) {
+            k_work_schedule_for_queue(&user_ui_work_q, &rgb_interval_dwork, 
+                                      K_SECONDS(message.effect.interval));
+        }
+        else {
+            total_lift_span_cnt = 0;
+        }
+    }
+    else {
+        k_work_schedule_for_queue(&user_ui_work_q, &rgb_interval_dwork, 
+                                  K_SECONDS(message.effect.interval));
+    }    
 }
 
 void user_ui_effect_task(void)
 {
-
+    printk("user_ui_effect_task initial\n");
     k_work_queue_init(&user_ui_work_q);
     k_work_queue_start(&user_ui_work_q, user_ui_work_q_stack,
                         K_THREAD_STACK_SIZEOF(user_ui_work_q_stack), USER_UI_WORK_Q_PRIORITY,
@@ -58,10 +97,20 @@ void user_ui_effect_task(void)
 
 	for (;;) {                                   
         k_msgq_get(&user_ui_msgq, &message, K_FOREVER);
+        printk("user_ui_effect_task get a message from msgq\n");
         if(message.effect.type == USER_UI_EFFECT_RGB_TYPE_CONTINUE){
+            printk("message.effect.type == USER_UI_EFFECT_RGB_TYPE_CONTINUE\n");
             k_work_schedule_for_queue(&user_ui_work_q, &rgb_set_color_dwork, K_NO_WAIT);
-            k_work_schedule_for_queue(&user_ui_work_q, &rgb_open_dwork,K_NO_WAIT);
-            k_work_schedule_for_queue(&user_ui_work_q, &rgb_close_dwork,K_SECONDS(message.effect.duration));
+            k_work_schedule_for_queue(&user_ui_work_q, &rgb_open_dwork, K_NO_WAIT);
+            if(message.effect.duration > 0) {
+                k_work_schedule_for_queue(&user_ui_work_q, &rgb_close_dwork,
+                                        K_SECONDS(message.effect.duration));
+            }
+        }
+        else {
+            printk("message.effect.type == USER_UI_EFFECT_RGB_TYPE_BLINKY\n");
+            total_lift_span_cnt = message.effect.duration;
+            k_work_schedule_for_queue(&user_ui_work_q, &rgb_interval_dwork, K_NO_WAIT);
         }
         
         printk("user_ui_effect_task get message from user app\n");            
@@ -84,6 +133,7 @@ K_THREAD_DEFINE(user_ui_thread,
  */
 int user_ui_effect_rgb_set(struct user_ui_color color_in, struct user_ui_effect effect_in)
 {
+    printk("user_ui_effect_rgb_set\n");
     int ret;
     user_ui_message message;
 
