@@ -12,7 +12,6 @@
 #include "ui_led.h"
 #include "ui_buzzer.h"
 #include <dk_buttons_and_leds.h>
-#include <zephyr/shell/shell.h>
 #include "user_ui_effect.h"
 
 LOG_MODULE_REGISTER(main, 3);
@@ -54,35 +53,6 @@ static uint8_t colour_val[NUM_LEDS];
 /* test */
 static struct k_work_delayable ui_test;
 
-static int cmd_gnss(const struct shell *shell, size_t argc,
-                         char **argv)
-{
-	int cnt;
-	shell_print(shell, "cmd_gnss argc = %d", argc);
-	for (cnt = 0; cnt < argc; cnt++) {
-			shell_print(shell, "cmd_gnss argv[%d] = %s", cnt, argv[cnt]);
-	}
-	return 0;
-}
-
-static int cmd_fftt(const struct shell *shell, size_t argc,
-                           char **argv)
-{
-	int cnt;
-	shell_print(shell, "cmd_fftt argc = %d", argc);
-	for (cnt = 0; cnt < argc; cnt++) {
-			shell_print(shell, "cmd_fftt argv[%d] = %s", cnt, argv[cnt]);
-	}
-	return 0;
-}
-
-SHELL_STATIC_SUBCMD_SET_CREATE(sub_thingy,
-        SHELL_CMD(gnss, NULL, "Start gnss test", cmd_gnss),
-        SHELL_CMD(fftt,   NULL, "Start first fix time test.", cmd_fftt),
-        SHELL_SUBCMD_SET_END
-);
-/* Creating root (level 0) command "demo" without a handler */
-SHELL_CMD_REGISTER(thingy, &sub_thingy, "Thingy 91 command line interface", NULL);
 
 static void server_transmission_work_fn(struct k_work *work)
 {
@@ -361,6 +331,9 @@ static uint8_t calculate_intensity(uint8_t colour_value, uint8_t brightness_valu
 static void user_led_init(void)
 {
 	uint8_t intensity;
+	int err;
+	struct user_ui_color rgb_color;
+	struct user_ui_effect rgb_effect;
 
 	if (IS_ENABLED(CONFIG_UI_LED_USE_PWM)) {
 		ui_led_pwm_init();
@@ -373,6 +346,20 @@ static void user_led_init(void)
 	} else if (IS_ENABLED(CONFIG_UI_LED_USE_GPIO)) {
 		ui_led_gpio_init();
 	}
+
+	rgb_color.red = 0;
+	rgb_color.green = 255;
+	rgb_color.blue = 0;
+
+	rgb_effect.type = USER_UI_EFFECT_RGB_TYPE_CONTINUE;
+	rgb_effect.interval = 2;
+	rgb_effect.duty = 50;
+	rgb_effect.duration = 0;
+	
+	err = user_ui_effect_rgb_set(rgb_color,rgb_effect);
+	if(err) {
+		LOG_ERR("user_ui_effect_rgb_set error");
+	}
 }
 
 static void button_event_handler(uint32_t button_state, uint32_t has_changed)
@@ -384,6 +371,8 @@ static void button_event_handler(uint32_t button_state, uint32_t has_changed)
 void main(void)
 {
 	int err;
+	struct user_ui_color rgb_color;
+	struct user_ui_effect rgb_effect;
 
 	printk("Thing simple example start\n");
 
@@ -419,6 +408,20 @@ void main(void)
 	k_sem_take(&lte_connected, K_FOREVER);
 #endif
 
+	rgb_color.red = 0;
+	rgb_color.green = 255;
+	rgb_color.blue = 0;
+
+	rgb_effect.type = USER_UI_EFFECT_RGB_TYPE_BLINKY;
+	rgb_effect.interval = 2;
+	rgb_effect.duty = 50;
+	rgb_effect.duration = 0;
+	
+	err = user_ui_effect_rgb_set(rgb_color,rgb_effect);
+	if(err) {
+		LOG_ERR("user_ui_effect_rgb_set error");
+	}
+
 	printk("LTE connected\n");
 
 	err = server_init();
@@ -435,5 +438,5 @@ void main(void)
 
 	k_work_schedule(&server_transmission_work, K_NO_WAIT);
 
-	k_work_schedule_for_queue(&user_work_q, &ui_test, K_SECONDS(10));
+
 }

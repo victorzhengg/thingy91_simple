@@ -31,7 +31,7 @@ static user_ui_message message;
 
 static void rgb_open_dwork_fn(struct k_work *work)
 {
-    printk("rgb_open_dwork_fn\n");
+    //printk("rgb_open_dwork_fn\n");
     ui_led_pwm_on_off(0, true); 
 	ui_led_pwm_on_off(1, true);
 	ui_led_pwm_on_off(2, true);    
@@ -39,7 +39,7 @@ static void rgb_open_dwork_fn(struct k_work *work)
 
 static void rgb_close_dwork_fn(struct k_work *work)
 {
-    printk("rgb_close_dwork_fn\n");
+    //printk("rgb_close_dwork_fn\n");
     ui_led_pwm_on_off(0, false); 
 	ui_led_pwm_on_off(1, false);
 	ui_led_pwm_on_off(2, false);    
@@ -47,7 +47,7 @@ static void rgb_close_dwork_fn(struct k_work *work)
 
 static void rgb_set_color_dwork_fn(struct k_work *work)
 {
-    printk("rgb_set_color_dwork_fn\n");
+    //printk("rgb_set_color_dwork_fn\n");
 	ui_led_pwm_set_intensity(0, message.color.red);     /*Red*/
 	ui_led_pwm_set_intensity(1, message.color.green);   /*Green*/
 	ui_led_pwm_set_intensity(2, message.color.blue);    /*Blue*/	
@@ -55,7 +55,7 @@ static void rgb_set_color_dwork_fn(struct k_work *work)
 
 static void rgb_interval_dwork_fn(struct k_work *work)
 {
-    printk("rgb_interval_dwork_fn\n");
+    //printk("rgb_interval_dwork_fn\n");
     uint16_t duty_value;
     //struct user_ui_message *message = CONTAINER_OF(work, struct user_ui_message, work);
     k_work_schedule_for_queue(&user_ui_work_q, &rgb_set_color_dwork, K_NO_WAIT);
