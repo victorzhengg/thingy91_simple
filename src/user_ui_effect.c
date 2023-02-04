@@ -84,6 +84,8 @@ static void rgb_interval_dwork_fn(struct k_work *work)
 
 void user_ui_effect_task(void)
 {
+    struct k_work_sync sync;
+
     printk("user_ui_effect_task initial\n");
     k_work_queue_init(&user_ui_work_q);
     k_work_queue_start(&user_ui_work_q, user_ui_work_q_stack,
@@ -98,6 +100,9 @@ void user_ui_effect_task(void)
 	for (;;) {                                   
         k_msgq_get(&user_ui_msgq, &message, K_FOREVER);
         printk("user_ui_effect_task get a message from msgq\n");
+        k_work_cancel_delayable_sync(&rgb_close_dwork, &sync);
+        k_work_cancel_delayable_sync(&rgb_interval_dwork, &sync);
+        
         if(message.effect.type == USER_UI_EFFECT_RGB_TYPE_CONTINUE){
             printk("message.effect.type == USER_UI_EFFECT_RGB_TYPE_CONTINUE\n");
             k_work_schedule_for_queue(&user_ui_work_q, &rgb_set_color_dwork, K_NO_WAIT);

@@ -1,13 +1,13 @@
 .. _udp:
 
-nRF9160: UDP
+nRF9160: Simple
 ############
 
 .. contents::
    :local:
    :depth: 2
 
-The UDP sample demonstrates the sequential transmission of UDP packets to a predetermined server identified by an IP address and a port.
+The simple sample demonstrates the Thingy91 application, which is much simple than the asset_tracker_v2
 The sample uses the :ref:`nrfxlib:nrf_modem` and :ref:`lte_lc_readme` library.
 
 Requirements
