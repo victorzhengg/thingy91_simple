@@ -56,15 +56,24 @@ static void rgb_set_color_dwork_fn(struct k_work *work)
 static void rgb_interval_dwork_fn(struct k_work *work)
 {
     //printk("rgb_interval_dwork_fn\n");
-    uint16_t duty_value;
+    uint32_t duty_value;
+    k_timeout_t delay_value;
     //struct user_ui_message *message = CONTAINER_OF(work, struct user_ui_message, work);
     k_work_schedule_for_queue(&user_ui_work_q, &rgb_set_color_dwork, K_NO_WAIT);
     k_work_schedule_for_queue(&user_ui_work_q, &rgb_open_dwork, K_NO_WAIT);
 
-    duty_value = (uint16_t)message.effect.interval * message.effect.duty;
-    duty_value = duty_value / 100;
+    if(message.effect.interval > 5) {
+        duty_value = (uint32_t)message.effect.interval * message.effect.duty;
+        duty_value = duty_value / 100;
+        delay_value = K_SECONDS(duty_value);
+    }
+    else {
+        duty_value = (uint32_t)message.effect.interval * 1000 * message.effect.duty;
+        duty_value = duty_value / 100;
+        delay_value = K_MSEC(duty_value);       
+    }
 
-    k_work_schedule_for_queue(&user_ui_work_q, &rgb_close_dwork, K_SECONDS(duty_value));
+    k_work_schedule_for_queue(&user_ui_work_q, &rgb_close_dwork, delay_value);
 
     if(message.effect.duration > 0) {
         total_lift_span_cnt = total_lift_span_cnt - message.effect.interval;
@@ -102,7 +111,7 @@ void user_ui_effect_task(void)
         printk("user_ui_effect_task get a message from msgq\n");
         k_work_cancel_delayable_sync(&rgb_close_dwork, &sync);
         k_work_cancel_delayable_sync(&rgb_interval_dwork, &sync);
-        
+
         if(message.effect.type == USER_UI_EFFECT_RGB_TYPE_CONTINUE){
             printk("message.effect.type == USER_UI_EFFECT_RGB_TYPE_CONTINUE\n");
             k_work_schedule_for_queue(&user_ui_work_q, &rgb_set_color_dwork, K_NO_WAIT);
