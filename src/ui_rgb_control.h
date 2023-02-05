@@ -17,7 +17,7 @@ extern "C" {
 
 
 /** @brief A structure used to set the RBG LED color. */
-struct user_ui_color {
+struct ui_rgb_control_color {
 	/* Red value range 0~255. */
 	uint8_t red;
 
@@ -28,7 +28,7 @@ struct user_ui_color {
 	uint8_t blue;
 };
 
-struct user_ui_effect {
+struct ui_rgb_control_effect {
 	/* type of RGB led effect. */
 	uint8_t type;
 
@@ -43,16 +43,16 @@ struct user_ui_effect {
 };
 
 typedef struct {
-    struct user_ui_color  color;
-    struct user_ui_effect effect;
-}__attribute__((aligned(4))) user_ui_message;
+    struct ui_rgb_control_color  color;
+    struct ui_rgb_control_effect effect;
+}__attribute__((aligned(4))) ui_rgb_control_message;
 
 /**
  * @brief set the RBG LED effect 
  *
  * @return int 0 if successful, negative error code if not.
  */
-int user_ui_effect_rgb_set(struct user_ui_color color, struct user_ui_effect effect);
+int ui_rgb_control_set(struct ui_rgb_control_color color, struct ui_rgb_control_effect effect);
 
 #ifdef __cplusplus
 }

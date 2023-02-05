@@ -9,12 +9,12 @@
 #include "ui_led.h"
 #include "ui_rgb_control.h"
 
-K_MSGQ_DEFINE(user_ui_msgq, sizeof(user_ui_message), 10, 4);
+K_MSGQ_DEFINE(ui_rgb_control_msgq, sizeof(ui_rgb_control_message), 5, 4);
 
-#define USER_UI_WORK_Q_STACK_SIZE 1024
-#define USER_UI_WORK_Q_PRIORITY      K_LOWEST_APPLICATION_THREAD_PRIO
-K_THREAD_STACK_DEFINE(user_ui_work_q_stack, USER_UI_WORK_Q_STACK_SIZE);
-static struct k_work_q user_ui_work_q;
+#define UI_RGB_CONTROL_WORK_Q_STACK_SIZE 512
+#define UI_RGB_CONTROL_WORK_Q_PRIORITY      K_LOWEST_APPLICATION_THREAD_PRIO
+K_THREAD_STACK_DEFINE(ui_rgb_control_work_q_stack, UI_RGB_CONTROL_WORK_Q_STACK_SIZE);
+static struct k_work_q ui_rgb_control_work_q;
 
 static struct k_work_delayable rgb_open_dwork;
 static struct k_work_delayable rgb_close_dwork;
@@ -22,11 +22,11 @@ static struct k_work_delayable rgb_set_color_dwork;
 static struct k_work_delayable rgb_interval_dwork;
 
 /******* user ui effect thread *******/
-#define USER_UI_THREAD_STACK_SIZE 1024
-#define USER_UI_THREAD_PRIORITY      K_LOWEST_APPLICATION_THREAD_PRIO - 1
+#define UI_RGB_CONTROL_THREAD_STACK_SIZE 512
+#define UI_RGB_CONTROL_THREAD_PRIORITY      K_LOWEST_APPLICATION_THREAD_PRIO - 1
 
 int16_t total_lift_span_cnt = 0;
-static user_ui_message message;
+static ui_rgb_control_message message;
 
 static void rgb_open_dwork_fn(struct k_work *work)
 {
@@ -57,9 +57,9 @@ static void rgb_interval_dwork_fn(struct k_work *work)
     //printk("rgb_interval_dwork_fn\n");
     uint32_t duty_value;
     k_timeout_t delay_value;
-    //struct user_ui_message *message = CONTAINER_OF(work, struct user_ui_message, work);
-    k_work_schedule_for_queue(&user_ui_work_q, &rgb_set_color_dwork, K_NO_WAIT);
-    k_work_schedule_for_queue(&user_ui_work_q, &rgb_open_dwork, K_NO_WAIT);
+   
+    k_work_schedule_for_queue(&ui_rgb_control_work_q, &rgb_set_color_dwork, K_NO_WAIT);
+    k_work_schedule_for_queue(&ui_rgb_control_work_q, &rgb_open_dwork, K_NO_WAIT);
 
     if(message.effect.interval > 5) {
         duty_value = (uint32_t)message.effect.interval * message.effect.duty;
@@ -72,12 +72,12 @@ static void rgb_interval_dwork_fn(struct k_work *work)
         delay_value = K_MSEC(duty_value);       
     }
 
-    k_work_schedule_for_queue(&user_ui_work_q, &rgb_close_dwork, delay_value);
+    k_work_schedule_for_queue(&ui_rgb_control_work_q, &rgb_close_dwork, delay_value);
 
     if(message.effect.duration > 0) {
         total_lift_span_cnt = total_lift_span_cnt - message.effect.interval;
         if(total_lift_span_cnt > 0) {
-            k_work_schedule_for_queue(&user_ui_work_q, &rgb_interval_dwork, 
+            k_work_schedule_for_queue(&ui_rgb_control_work_q, &rgb_interval_dwork, 
                                       K_SECONDS(message.effect.interval));
         }
         else {
@@ -85,19 +85,20 @@ static void rgb_interval_dwork_fn(struct k_work *work)
         }
     }
     else {
-        k_work_schedule_for_queue(&user_ui_work_q, &rgb_interval_dwork, 
+        k_work_schedule_for_queue(&ui_rgb_control_work_q, &rgb_interval_dwork, 
                                   K_SECONDS(message.effect.interval));
     }    
 }
 
-static void user_ui_effect_task(void)
+static void ui_rgb_control_task(void)
 {
     struct k_work_sync sync;
 
     printk("user_ui_effect_task initial\n");
-    k_work_queue_init(&user_ui_work_q);
-    k_work_queue_start(&user_ui_work_q, user_ui_work_q_stack,
-                        K_THREAD_STACK_SIZEOF(user_ui_work_q_stack), USER_UI_WORK_Q_PRIORITY,
+    k_work_queue_init(&ui_rgb_control_work_q);
+    k_work_queue_start(&ui_rgb_control_work_q, ui_rgb_control_work_q_stack,
+                        K_THREAD_STACK_SIZEOF(ui_rgb_control_work_q_stack), 
+                        UI_RGB_CONTROL_WORK_Q_PRIORITY,
                         NULL);
 
     k_work_init_delayable(&rgb_open_dwork, rgb_open_dwork_fn);
@@ -106,24 +107,24 @@ static void user_ui_effect_task(void)
     k_work_init_delayable(&rgb_interval_dwork, rgb_interval_dwork_fn);
 
 	for (;;) {                                   
-        k_msgq_get(&user_ui_msgq, &message, K_FOREVER);
+        k_msgq_get(&ui_rgb_control_msgq, &message, K_FOREVER);
         printk("user_ui_effect_task get a message from msgq\n");
         k_work_cancel_delayable_sync(&rgb_close_dwork, &sync);
         k_work_cancel_delayable_sync(&rgb_interval_dwork, &sync);
 
         if(message.effect.type == USER_UI_EFFECT_RGB_TYPE_CONTINUE){
             printk("message.effect.type == USER_UI_EFFECT_RGB_TYPE_CONTINUE\n");
-            k_work_schedule_for_queue(&user_ui_work_q, &rgb_set_color_dwork, K_NO_WAIT);
-            k_work_schedule_for_queue(&user_ui_work_q, &rgb_open_dwork, K_NO_WAIT);
+            k_work_schedule_for_queue(&ui_rgb_control_work_q, &rgb_set_color_dwork, K_NO_WAIT);
+            k_work_schedule_for_queue(&ui_rgb_control_work_q, &rgb_open_dwork, K_NO_WAIT);
             if(message.effect.duration > 0) {
-                k_work_schedule_for_queue(&user_ui_work_q, &rgb_close_dwork,
+                k_work_schedule_for_queue(&ui_rgb_control_work_q, &rgb_close_dwork,
                                         K_SECONDS(message.effect.duration));
             }
         }
         else {
             printk("message.effect.type == USER_UI_EFFECT_RGB_TYPE_BLINKY\n");
             total_lift_span_cnt = message.effect.duration;
-            k_work_schedule_for_queue(&user_ui_work_q, &rgb_interval_dwork, K_NO_WAIT);
+            k_work_schedule_for_queue(&ui_rgb_control_work_q, &rgb_interval_dwork, K_NO_WAIT);
         }
         
         printk("user_ui_effect_task get message from user app\n");            
@@ -131,11 +132,11 @@ static void user_ui_effect_task(void)
 }
 
 
-K_THREAD_DEFINE(user_ui_thread, 
-                USER_UI_THREAD_STACK_SIZE,
-                user_ui_effect_task,
+K_THREAD_DEFINE(ui_rgb_control_thread, 
+                UI_RGB_CONTROL_THREAD_STACK_SIZE,
+                ui_rgb_control_task,
 		        NULL, NULL, NULL,
-                USER_UI_THREAD_PRIORITY,
+                UI_RGB_CONTROL_THREAD_PRIORITY,
                 0, 0);
 
 
@@ -144,16 +145,16 @@ K_THREAD_DEFINE(user_ui_thread,
  *
  * @return int 0 if successful, negative error code if not.
  */
-int user_ui_effect_rgb_set(struct user_ui_color color_in, struct user_ui_effect effect_in)
+int ui_rgb_control_set(struct ui_rgb_control_color color_in, struct ui_rgb_control_effect effect_in)
 {
     printk("user_ui_effect_rgb_set\n");
     int ret;
-    user_ui_message message;
+    ui_rgb_control_message message;
 
     message.color = color_in;
     message.effect = effect_in;
 
-    ret = k_msgq_put(&user_ui_msgq, &message, K_NO_WAIT);
+    ret = k_msgq_put(&ui_rgb_control_msgq, &message, K_NO_WAIT);
 
     return ret;
 }

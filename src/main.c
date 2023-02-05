@@ -269,8 +269,8 @@ static void gnss_data_process_dwork_fn(struct k_work *work)
 static void ui_test_fn(struct k_work *work)
 {
 	int ret;
-	struct user_ui_color rgb_color;
-	struct user_ui_effect rgb_effect;
+	struct ui_rgb_control_color rgb_color;
+	struct ui_rgb_control_effect rgb_effect;
 
 	rgb_color.red = 0;
 	rgb_color.green = 255;
@@ -281,9 +281,9 @@ static void ui_test_fn(struct k_work *work)
 	rgb_effect.duty = 50;
 	rgb_effect.duration = 120;
 	
-	ret = user_ui_effect_rgb_set(rgb_color,rgb_effect);
+	ret = ui_rgb_control_set(rgb_color,rgb_effect);
 	if(ret) {
-		LOG_ERR("user_ui_effect_rgb_set error");
+		LOG_ERR("ui_rgb_control_set error");
 	}
 }
 
@@ -332,8 +332,8 @@ static void user_led_init(void)
 {
 	uint8_t intensity;
 	int err;
-	struct user_ui_color rgb_color;
-	struct user_ui_effect rgb_effect;
+	struct ui_rgb_control_color rgb_color;
+	struct ui_rgb_control_effect rgb_effect;
 
 	if (IS_ENABLED(CONFIG_UI_LED_USE_PWM)) {
 		ui_led_pwm_init();
@@ -356,9 +356,9 @@ static void user_led_init(void)
 	rgb_effect.duty = 50;
 	rgb_effect.duration = 0;
 	
-	err = user_ui_effect_rgb_set(rgb_color,rgb_effect);
+	err = ui_rgb_control_set(rgb_color,rgb_effect);
 	if(err) {
-		LOG_ERR("user_ui_effect_rgb_set error");
+		LOG_ERR("ui_rgb_control_set error");
 	}
 }
 
@@ -371,8 +371,8 @@ static void button_event_handler(uint32_t button_state, uint32_t has_changed)
 void main(void)
 {
 	int err;
-	struct user_ui_color rgb_color;
-	struct user_ui_effect rgb_effect;
+	struct ui_rgb_control_color rgb_color;
+	struct ui_rgb_control_effect rgb_effect;
 
 	printk("Thing simple example start\n");
 
@@ -417,9 +417,9 @@ void main(void)
 	rgb_effect.duty = 50;
 	rgb_effect.duration = 0;
 	
-	err = user_ui_effect_rgb_set(rgb_color,rgb_effect);
+	err = ui_rgb_control_set(rgb_color,rgb_effect);
 	if(err) {
-		LOG_ERR("user_ui_effect_rgb_set error");
+		LOG_ERR("ui_rgb_control_set error");
 	}
 
 	printk("LTE connected\n");

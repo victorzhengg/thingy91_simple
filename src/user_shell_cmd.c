@@ -38,8 +38,8 @@ static int cmd_rgb(const struct shell *shell, size_t argc,
 {
 	int cnt;
 	int ret;
-	struct user_ui_color rgb_color;
-	struct user_ui_effect rgb_effect;
+	struct ui_rgb_control_color rgb_color;
+	struct ui_rgb_control_effect rgb_effect;
 	uint32_t arg_val;
 	uint16_t arg_flag = 0;
 	uint8_t arg_opt_flag = 2;
@@ -123,9 +123,9 @@ static int cmd_rgb(const struct shell *shell, size_t argc,
 		}
 	}
 	if(arg_flag == 0) {
-		ret = user_ui_effect_rgb_set(rgb_color,rgb_effect);
+		ret = ui_rgb_control_set(rgb_color,rgb_effect);
 		if(ret) {
-			shell_print(shell, "cmd_rgb excute fail due to user_ui_effect_rgb_set retrun: %d", ret);
+			shell_print(shell, "cmd_rgb excute fail due to ui_rgb_control_set retrun: %d", ret);
 		}
 		else {
 			shell_print(shell, "cmd_rgb excute success");
