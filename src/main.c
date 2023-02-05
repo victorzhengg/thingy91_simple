@@ -276,7 +276,7 @@ static void ui_test_fn(struct k_work *work)
 	rgb_color.green = 255;
 	rgb_color.blue = 0;
 
-	rgb_effect.type = USER_UI_EFFECT_RGB_TYPE_BLINKY;
+	rgb_effect.type = UI_RGB_CONTROL_TYPE_BLINKY;
 	rgb_effect.interval = 2;
 	rgb_effect.duty = 50;
 	rgb_effect.duration = 120;
@@ -351,7 +351,7 @@ static void user_led_init(void)
 	rgb_color.green = 255;
 	rgb_color.blue = 0;
 
-	rgb_effect.type = USER_UI_EFFECT_RGB_TYPE_CONTINUE;
+	rgb_effect.type = UI_RGB_CONTROL_TYPE_CONTINUE;
 	rgb_effect.interval = 2;
 	rgb_effect.duty = 50;
 	rgb_effect.duration = 0;
@@ -412,7 +412,7 @@ void main(void)
 	rgb_color.green = 255;
 	rgb_color.blue = 0;
 
-	rgb_effect.type = USER_UI_EFFECT_RGB_TYPE_BLINKY;
+	rgb_effect.type = UI_RGB_CONTROL_TYPE_BLINKY;
 	rgb_effect.interval = 2;
 	rgb_effect.duty = 50;
 	rgb_effect.duration = 0;

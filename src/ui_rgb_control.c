@@ -25,7 +25,7 @@ static struct k_work_delayable rgb_interval_dwork;
 #define UI_RGB_CONTROL_THREAD_STACK_SIZE 512
 #define UI_RGB_CONTROL_THREAD_PRIORITY      K_LOWEST_APPLICATION_THREAD_PRIO - 1
 
-int16_t total_lift_span_cnt = 0;
+static int16_t total_lift_span_cnt = 0;
 static ui_rgb_control_message message;
 
 static void rgb_open_dwork_fn(struct k_work *work)
@@ -94,7 +94,7 @@ static void ui_rgb_control_task(void)
 {
     struct k_work_sync sync;
 
-    printk("user_ui_effect_task initial\n");
+    printk("ui_rgb_control_task initial\n");
     k_work_queue_init(&ui_rgb_control_work_q);
     k_work_queue_start(&ui_rgb_control_work_q, ui_rgb_control_work_q_stack,
                         K_THREAD_STACK_SIZEOF(ui_rgb_control_work_q_stack), 
@@ -108,12 +108,12 @@ static void ui_rgb_control_task(void)
 
 	for (;;) {                                   
         k_msgq_get(&ui_rgb_control_msgq, &message, K_FOREVER);
-        printk("user_ui_effect_task get a message from msgq\n");
+        printk("ui_rgb_control_task get a message from msgq\n");
         k_work_cancel_delayable_sync(&rgb_close_dwork, &sync);
         k_work_cancel_delayable_sync(&rgb_interval_dwork, &sync);
 
-        if(message.effect.type == USER_UI_EFFECT_RGB_TYPE_CONTINUE){
-            printk("message.effect.type == USER_UI_EFFECT_RGB_TYPE_CONTINUE\n");
+        if(message.effect.type == UI_RGB_CONTROL_TYPE_CONTINUE){
+            printk("message.effect.type == UI_RGB_CONTROL_TYPE_CONTINUE\n");
             k_work_schedule_for_queue(&ui_rgb_control_work_q, &rgb_set_color_dwork, K_NO_WAIT);
             k_work_schedule_for_queue(&ui_rgb_control_work_q, &rgb_open_dwork, K_NO_WAIT);
             if(message.effect.duration > 0) {
@@ -122,12 +122,10 @@ static void ui_rgb_control_task(void)
             }
         }
         else {
-            printk("message.effect.type == USER_UI_EFFECT_RGB_TYPE_BLINKY\n");
+            printk("message.effect.type == UI_RGB_CONTROL_TYPE_BLINKY\n");
             total_lift_span_cnt = message.effect.duration;
             k_work_schedule_for_queue(&ui_rgb_control_work_q, &rgb_interval_dwork, K_NO_WAIT);
-        }
-        
-        printk("user_ui_effect_task get message from user app\n");            
+        }          
 	}
 }
 

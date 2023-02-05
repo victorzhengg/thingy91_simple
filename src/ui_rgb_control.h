@@ -12,8 +12,8 @@
 extern "C" {
 #endif
 
-#define USER_UI_EFFECT_RGB_TYPE_CONTINUE      0
-#define USER_UI_EFFECT_RGB_TYPE_BLINKY        1
+#define UI_RGB_CONTROL_TYPE_CONTINUE      0
+#define UI_RGB_CONTROL_TYPE_BLINKY        1
 
 
 /** @brief A structure used to set the RBG LED color. */
