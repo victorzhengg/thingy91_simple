@@ -3,8 +3,8 @@
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
-#ifndef UER_UI_EFFECT_H__
-#define UER_UI_EFFECT_H__
+#ifndef UI_RGB_CONTROL_H__
+#define UI_RGB_CONTROL_H__
 
 #include <zephyr/kernel.h>
 
@@ -58,4 +58,4 @@ int user_ui_effect_rgb_set(struct user_ui_color color, struct user_ui_effect eff
 }
 #endif
 
-#endif /* UI_INPUT_H__ */
+#endif /* UI_RGB_CONTROL_H__ */

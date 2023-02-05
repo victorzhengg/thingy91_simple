@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <zephyr/shell/shell.h>
 
-#include "user_ui_effect.h"
+#include "ui_rgb_control.h"
 #include "user_shell_cmd.h"
 
 static int cmd_gnss(const struct shell *shell, size_t argc,

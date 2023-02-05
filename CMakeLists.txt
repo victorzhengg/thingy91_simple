@@ -11,7 +11,7 @@ project(udp)
 
 # NORDIC SDK APP START
 target_sources(app PRIVATE src/main.c)
-target_sources(app PRIVATE src/user_ui_effect.c)
+target_sources(app PRIVATE src/ui_rgb_control.c)
 target_sources(app PRIVATE src/user_shell_cmd.c)
 # NORDIC SDK APP END
 

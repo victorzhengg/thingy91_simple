@@ -12,7 +12,7 @@
 #include "ui_led.h"
 #include "ui_buzzer.h"
 #include <dk_buttons_and_leds.h>
-#include "user_ui_effect.h"
+#include "ui_rgb_control.h"
 
 LOG_MODULE_REGISTER(main, 3);
 

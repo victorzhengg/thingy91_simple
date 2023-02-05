@@ -7,8 +7,7 @@
 #include <zephyr/kernel.h>
 #include <stdio.h>
 #include "ui_led.h"
-#include "ui_buzzer.h"
-#include "user_ui_effect.h"
+#include "ui_rgb_control.h"
 
 K_MSGQ_DEFINE(user_ui_msgq, sizeof(user_ui_message), 10, 4);
 
@@ -91,7 +90,7 @@ static void rgb_interval_dwork_fn(struct k_work *work)
     }    
 }
 
-void user_ui_effect_task(void)
+static void user_ui_effect_task(void)
 {
     struct k_work_sync sync;
 
